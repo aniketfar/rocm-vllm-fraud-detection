@@ -1,0 +1,158 @@
+# AMD ROCm vLLM Fraud Detection System Configuration
+
+# ============================================
+# GPU Configuration
+# ============================================
+GPU:
+  device_type: "cuda"  # or "rocm" for AMD
+  device_id: 0
+  memory_fraction: 0.9
+  num_workers: 4
+  batch_size: 32
+
+# ============================================
+# vLLM Model Configuration
+# ============================================
+VLLM:
+  model_name: "meta-llama/Llama-2-7b-hf"
+  tensor_parallel_size: 1
+  pipeline_parallel_size: 1
+  max_model_len: 2048
+  max_num_batched_tokens: 5120
+  gpu_memory_utilization: 0.9
+  swap_space: 4  # GB
+  dtype: "float16"
+  load_format: "auto"
+
+# ============================================
+# Fraud Detection Model Configuration
+# ============================================
+MODEL:
+  name: "vllm_fraud_detector_v1"
+  version: "1.0.0"
+  max_tokens: 512
+  temperature: 0.7
+  top_p: 0.95
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+  
+  # Ensemble models
+  xgboost:
+    enabled: true
+    max_depth: 8
+    n_estimators: 100
+    learning_rate: 0.1
+  
+  isolation_forest:
+    enabled: true
+    contamination: 0.1
+    n_estimators: 100
+  
+  neural_network:
+    enabled: true
+    layers: [128, 64, 32, 16]
+    dropout: 0.3
+    activation: "relu"
+
+# ============================================
+# Risk Thresholds
+# ============================================
+THRESHOLDS:
+  critical: 0.81
+  high: 0.61
+  medium: 0.31
+  low: 0.0
+  
+  # Risk weights
+  country_risk_weight: 0.30
+  transaction_anomaly_weight: 0.25
+  name_match_weight: 0.20
+  behavioral_pattern_weight: 0.15
+  account_age_weight: 0.10
+
+# ============================================
+# Account Blocking Rules
+# ============================================
+BLOCKING:
+  auto_block_critical: true
+  auto_block_high: false
+  auto_block_medium: false
+  
+  # Notification
+  enable_alerts: true
+  alert_email: "fraud_team@bank.com"
+  alert_sms: true
+  alert_webhook: "https://alerts.bank.com/webhook"
+  
+  # Actions
+  freeze_account: true
+  suspend_transactions: true
+  require_verification: true
+  send_notification_to_customer: false
+
+# ============================================
+# Data Configuration
+# ============================================
+DATA:
+  high_risk_countries:
+    - "KP"  # North Korea
+    - "IR"  # Iran
+    - "SY"  # Syria
+    - "CU"  # Cuba
+    - "SD"  # Sudan
+    - "BY"  # Belarus
+    - "VE"  # Venezuela
+  
+  medium_risk_countries:
+    - "RU"  # Russia
+    - "CN"  # China
+    - "PK"  # Pakistan
+    - "AF"  # Afghanistan
+  
+  # Data paths
+  risky_countries_file: "data/risky_countries.json"
+  sanctions_list_file: "data/sanctions_list.json"
+  prohibited_names_file: "data/prohibited_names.json"
+
+# ============================================
+# Logging Configuration
+# ============================================
+LOGGING:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/fraud_detection.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  console_output: true
+
+# ============================================
+# Database Configuration
+# ============================================
+DATABASE:
+  type: "sqlite"  # sqlite, postgresql, mysql
+  connection_string: "sqlite:///fraud_detection.db"
+  
+  # Connection pooling
+  pool_size: 20
+  max_overflow: 40
+  pool_recycle: 3600
+
+# ============================================
+# Report Configuration
+# ============================================
+REPORT:
+  output_format: "html"  # html, pdf, json
+  output_dir: "reports/"
+  include_charts: true
+  include_recommendations: true
+  include_audit_trail: true
+
+# ============================================
+# Performance Tuning
+# ============================================
+PERFORMANCE:
+  max_workers: 4
+  cache_enabled: true
+  cache_ttl: 3600
+  batch_processing: true
+  async_processing: true
